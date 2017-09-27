@@ -1,3 +1,4 @@
+from random import randint
 import sys
 import time
 import resource
@@ -41,7 +42,7 @@ def main():
 	if len( clauses ) < m:
 		clauses.append( clause )            		
 
-	maxFlips = n 	# number of search restarts
+	maxFlips = 3*n 	# number of search restarts
 	maxTries = 100	# amount of time to spend looking for an assignment
 
 	print m, n
@@ -58,6 +59,17 @@ def main():
 			# T ??
 			p = 0
 
+	print generateAttempt( n )
+
 def generateAttempt( n ):
+	result = []
+	for i in xrange( n ):
+		result.append( randint( 0, 1 ) )
+
+	return result
+
+def satisfies( vec, clauses ):
+	for c in clauses:
+		for i in xrange( len( c ) ):
 
 main()
