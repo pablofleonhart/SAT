@@ -3,114 +3,128 @@ import sys
 import time
 import resource
 
-def main():
-	param = sys.argv[1:]
-
-	file = open( param[0], "r" )
-	finish = False
-	read = False
-
+class GSat:
 	m = 0	# variables
 	n = 0	# clauses
 	clauses = []	# set of clauses
-	clause = []
 
-	while not finish:
-	    line = file.readline()
+	def __init__( self, filename ):
+		file = open( filename, "r" )
+		finish = False
+		read = False
+		
+		clause = []
 
-	    if not line:
-	        finish = True
+		while not finish:
+		    line = file.readline()
 
-	    else:
-	    	#print line.split( "0" )
-	        line = line.split()
-	        
-	        if len( line ) > 0:
-	            if line[0] == 'p':
-	                n = int( line[2] )
-	                m = int( line[3] )
-	                read = True
+		    if not line:
+		        finish = True
 
-	            elif read:
-	            	for i in xrange( len( line ) ):
-	            		if line[i] == '0':
-	            			clauses.append( clause )
-	            			clause = []
-	            		else:
-	            			clause.append( line[i] )
+		    else:
+		        line = line.split()
+		        
+		        if len( line ) > 0:
+		            if line[0] == 'p':
+		                self.n = int( line[2] )
+		                self.m = int( line[3] )
+		                read = True
 
-	if len( clauses ) < m:
-		clauses.append( clause )            		
+		            elif read:
+		            	for i in xrange( len( line ) ):
+		            		if line[i] == '0':
+		            			self.clauses.append( clause )
+		            			clause = []
+		            		else:
+		            			clause.append( line[i] )
 
-	maxFlips = 3*n 	# number of search's restarts
-	maxTries = 100	# amount of time to spend looking for an assignment
-	seed = 1001
+		if len( self.clauses ) < self.m:
+			self.clauses.append( clause )
 
-	print m, n
-	print clauses, len( clauses )
+		file.close()
 
-	for i in xrange( m ):
-		print clauses[i], "and"
+	def run( self ):
+		maxFlips = 3 * self.n 	# number of search's restarts
+		maxTries = 200			# amount of time to spend looking for an assignment
+		seed = time.time()
+		print "seed", seed
+		it = 0
 
-	for i in xrange( maxTries ):
-		# T = generates randomly truth assignment
-		t = generateAttempt( n+1, seed )
-		for j in xrange( maxFlips ):
-			res = satisfies( t, clauses )
-			if res[0]:
-				print 'OK'
-			# if T is satisfied, return T
-			# p ?
-			# T ??
-			p = 0
+		#for i in xrange( m ):
+		#	print clauses[i], "and"
 
-	v = generateAttempt( n+1, seed )
-	#v = random.randrange( 0, 1, n+1 )
-	print v
-	print satisfies( v, clauses )
+		t = []
+		for i in xrange( maxTries ):
+			#print 'Try', i + 1
+			seed += 10000
+			# generates randomly truth assignment
+			t = self.generateAttempt( self.n + 1, seed )
 
-def generateAttempt( n, s ):
-	seed( s )
-	result = []
-	for i in xrange( n ):
-		result.append( randint( 0, 1 ) )
+			for j in xrange( maxFlips ):
+				it += 1
+				res = self.satisfies( t )
+				if res[0]:
+					return ( t, j, it )
 
-	return result
+				p = self.getVariable( res[1] )			
+				t[p] = self.invValue( t[p] )
 
-def invValue( v ):
-	if v == 0:
-		return 1
-	else:
-		return 0
+		return ( 'Insatisfied' )
 
-def satisfies( vec, clauses ):
-	res = [] # values from each clause
-	ins = [ 0 for i in xrange( len( vec ) )] # number of clauses insatisfied ( by variable )
-	sat = 1
+	def generateAttempt( self, n, s ):		
+		seed( s )
+		result = []
+		for i in xrange( n ):
+			result.append( randint( 0, 1 ) )
 
-	for c in clauses:
-		s = 0 # value of clause
-		for i in xrange( len( c ) ):
-			ab = abs( int( c[i] ) )
-			if int( c[i] ) < 0:
-				value = invValue( vec[ab] )
-			else:
-				value = vec[ab]
+		return result
 
-			s += value
-			#print c[i], int( c[i] ) > 0, ab, value
-		#print c, s
-		if s == 0:
+	def invValue( self, v ):
+		if v == 0:
+			return 1
+		else:
+			return 0
+
+	def getVariable( self, vec ):
+		mx = 0
+		px = []
+
+		for i in xrange( 1, len( vec ) ):
+			if vec[i] > mx:
+				mx = vec[i]
+				px = []
+				px.append( i )
+			elif vec[i] == mx:
+				px.append( i )
+
+		if len( px ) == 1:
+			return px[0]
+		else:
+			return choice( px )
+
+	def satisfies( self, vec, ):
+		res = [] # values from each clause
+		ins = [ 0 for i in xrange( len( vec ) )] # number of clauses insatisfied ( by variable )
+		sat = 1
+
+		for c in self.clauses:
+			s = 0 # value of clause
 			for i in xrange( len( c ) ):
 				ab = abs( int( c[i] ) )
-				ins[ab] += 1
+				if int( c[i] ) < 0:
+					value = self.invValue( vec[ab] )
+				else:
+					value = vec[ab]
 
-			sat = 0
+				s += value
 
-		res.append( s )
+			if s == 0:
+				for i in xrange( len( c ) ):
+					ab = abs( int( c[i] ) )
+					ins[ab] += 1
 
-	#print res
-	#print ins
-	return ( sat == 1, ins )
+				sat = 0
 
-main()
+			res.append( s )
+
+		return ( sat == 1, ins )
