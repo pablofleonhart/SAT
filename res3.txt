@@ -1,0 +1,16 @@
+alg      instance      rep    t      p   i         
+gsat     flat50-1      1      27.65  218 24969     
+gsat     flat50-1      2      30.08  304 26855     
+gsat     flat50-1      3      11.20  432 10783     
+gsat     flat50-1      4      1.59   184 1535      
+gsat     flat50-1      5      4.17   445 4046      
+gsat     flat50-1      6      36.53  281 34932     
+gsat     flat50-1      7      14.34  385 13886     
+gsat     flat50-1      8      14.82  420 14371     
+gsat     flat50-1      9      4.06   334 3935      
+gsat     flat50-1      10     12.94  346 12497     
+gsat     flat50-1      11     25.43  362 24663     
+gsat     flat50-1      12     11.55  411 11212     
+gsat     flat50-1      13     73.17  252 70903     
+gsat     flat50-1      14     10.43  212 10113     
+gsat     flat50-1      15     10.64  353 10254     

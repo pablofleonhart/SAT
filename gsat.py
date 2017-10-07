@@ -1,3 +1,4 @@
+from operator import itemgetter
 from random import *
 import sys
 import time
@@ -43,19 +44,15 @@ class GSat:
 
 		file.close()
 
-	def run( self ):
+	def run( self, tries ):
 		maxFlips = 3 * self.n 	# number of search's restarts
-		maxTries = 200			# amount of time to spend looking for an assignment
+		maxTries = tries		# amount of time to spend looking for an assignment
 		seed = time.time()
-		print "seed", seed
 		it = 0
-
-		#for i in xrange( m ):
-		#	print clauses[i], "and"
-
+		start = time.time()
 		t = []
-		for i in xrange( maxTries ):
-			#print 'Try', i + 1
+		while time.time() - start < tries:
+		#for i in xrange( maxTries ):
 			seed += 10000
 			# generates randomly truth assignment
 			t = self.generateAttempt( self.n + 1, seed )
@@ -68,6 +65,7 @@ class GSat:
 
 				p = self.getVariable( res[1] )			
 				t[p] = self.invValue( t[p] )
+				#print p
 
 		return ( 'Insatisfied' )
 
@@ -88,7 +86,12 @@ class GSat:
 	def getVariable( self, vec ):
 		mx = 0
 		px = []
-
+		#print vec
+		#idxs, srd = zip( *sorted( enumerate( vec ), key=itemgetter( 1 ), reverse=True ) )		
+		#tam = int( len( vec )*0.02 )
+		#print srd[:tam], idxs[:tam]
+		#change = self.reservoir_sampling( list( srd[:tam] ), list( idxs[:tam] ), 1 )
+		#print self.qsort( vec )
 		for i in xrange( 1, len( vec ) ):
 			if vec[i] > mx:
 				mx = vec[i]
@@ -97,10 +100,33 @@ class GSat:
 			elif vec[i] == mx:
 				px.append( i )
 
+		#print self.reservoir_sampling( px, 5 )
 		if len( px ) == 1:
 			return px[0]
 		else:
 			return choice( px )
+		#return change[0]
+
+	def reservoir_sampling( self, items, idxs, k ):
+		""" 
+		Reservoir sampling algorithm for large sample space or unknow end list
+		See <http://en.wikipedia.org/wiki/Reservoir_sampling> for detail>
+		Type: ([a] * Int) -> [a]
+		Prev constrain: k is positive and items at least of k items
+		Post constrain: the length of return array is k
+		"""
+		#print items, len( items )
+		sample = items[0:k]
+		isample = idxs[0:k]
+		#print sample, isample
+
+		for i in range( k, len( items ) ):
+			j = randrange( 0, i + 1 )
+			if j < k and items[i] > 0:
+				sample[j] = items[i]
+				isample[j] = idxs[i]
+
+		return isample
 
 	def satisfies( self, vec, ):
 		res = [] # values from each clause

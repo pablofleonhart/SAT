@@ -1,6 +1,8 @@
 import os
+import sys
 import time
 from gsat import GSat
+from walksat import WalkSat
 
 def mean( data ):
     n = len( data )
@@ -22,46 +24,89 @@ def pstdev( data ):
     pvar = ss / n
     return pvar ** 0.5
 
+if ( len(sys.argv) != 3 ):
+	print "Use:", sys.argv[0], "<sat_problem.cnf> <MaxTime(seconds)>"
+	sys.exit(1)
+
 pattern = "{:9s}{:14s}{:7s}{:7s}{:4s}{:10s}"
-file = open( "results.txt", 'w' )
+file = open( "results.txt", 'a' )
 file.write( pattern.format( "alg", "instance", "rep", 't', 'p', 'i' ) + '\n' )
+file.close()
 
 ti = []
 period = []
 iteration = []
+wti = []
+wperiod = []
+witeration = []
 
-files = [ "flat50-1.cnf", "flat75-1.cnf", "flat100-1.cnf", "par8-5-c.cnf" ]
+param = sys.argv[1:]
+filename = param[0]
+tries = int( param[1] )
 
-for f in files:
-	filename = "files/" + f
-	gsat = GSat( filename )
-	
-	for i in xrange( 1, 16 ):		
-		start = time.time()
-		res = gsat.run()
-		end = time.time()
-		drt = end - start
+gsat = GSat( filename )
+wsat = WalkSat( filename )
 
-		nfile = f.replace( ".cnf", '' )
+for i in xrange( 1, 16 ):		
+	start = time.time()
+	res = gsat.run( tries )
+	end = time.time()
+	drt = end - start
 
-		if res == 'Insatisfied':
-			pattern = "{:9s}{:14s}{:<7d}{:<7s}{:<4s}{:<10s}"
-			file.write( pattern.format( "gsat", nfile, i, "NA", "NA", "NA" ) + '\n' )
-			ti.append( 0 )
-			period.append( 0 )
-			iteration.append( 0 )
+	f = filename.split( "/" )[1]
+	nfile = f.replace( ".cnf", '' )
 
-		else:
-			pattern = "{:9s}{:14s}{:<7d}{:<7.2f}{:<4d}{:<10d}"
-			file.write( pattern.format( "gsat", nfile, i, drt, res[1], res[2] ) + '\n' )
-			ti.append( drt )
-			period.append( res[1] )
-			iteration.append( res[2] )
+	if res == 'Insatisfied':
+		pattern = "{:9s}{:14s}{:<7d}{:<7.2f}{:<4s}{:<10s}"
+		file = open( "results.txt", 'a' )
+		file.write( pattern.format( "gsat", nfile, i, drt, "NA", "NA" ) + '\n' )
+		file.close()
+		ti.append( drt )
+		period.append( 0 )
+		iteration.append( 0 )
 
-		print "gsat", i, drt
+	else:
+		pattern = "{:9s}{:14s}{:<7d}{:<7.2f}{:<4d}{:<10d}"
+		file = open( "results.txt", 'a' )
+		file.write( pattern.format( "gsat", nfile, i, drt, res[1], res[2] ) + '\n' )
+		file.close()
+		ti.append( drt )
+		period.append( res[1] )
+		iteration.append( res[2] )
 
-	print "gsat " + nfile + " " + str( '{0:,.2f}'.format( mean( ti ) ) ), str( '{0:,.2f}'.format( pstdev( ti ) ) )
-	print "gsat " + nfile + " " + str( '{0:,.2f}'.format( mean( period ) ) ), str( '{0:,.2f}'.format( pstdev( period ) ) )
-	print "gsat " + nfile + " " + str( '{0:,.2f}'.format( mean( iteration ) ) ), str( '{0:,.2f}'.format( pstdev( iteration ) ) )
+	print "gsat", i, drt
 
-file.close()
+	start = time.time()
+	res = wsat.run( tries )
+	end = time.time()
+	drt = end - start
+
+	f = filename.split( "/" )[1]
+	nfile = f.replace( ".cnf", '' )
+
+	if res == 'Insatisfied':
+		pattern = "{:9s}{:14s}{:<7d}{:<7.2f}{:<4s}{:<10s}"
+		file = open( "results.txt", 'a' )
+		file.write( pattern.format( "walksat", nfile, i, drt, "NA", "NA" ) + '\n' )
+		file.close()
+		wti.append( drt )
+		wperiod.append( 0 )
+		witeration.append( 0 )
+
+	else:
+		pattern = "{:9s}{:14s}{:<7d}{:<7.2f}{:<4d}{:<10d}"
+		file = open( "results.txt", 'a' )
+		file.write( pattern.format( "walksat", nfile, i, drt, res[1], res[2] ) + '\n' )
+		file.close()
+		wti.append( drt )
+		wperiod.append( res[1] )
+		witeration.append( res[2] )
+
+	print "walksat", i, drt
+
+print "gsat " + nfile + " " + str( '{0:,.2f}'.format( mean( ti ) ) ), str( '{0:,.2f}'.format( pstdev( ti ) ) )
+print "gsat " + nfile + " " + str( '{0:,.2f}'.format( mean( period ) ) ), str( '{0:,.2f}'.format( pstdev( period ) ) )
+print "gsat " + nfile + " " + str( '{0:,.2f}'.format( mean( iteration ) ) ), str( '{0:,.2f}'.format( pstdev( iteration ) ) )
+print "walksat " + nfile + " " + str( '{0:,.2f}'.format( mean( wti ) ) ), str( '{0:,.2f}'.format( pstdev( wti ) ) )
+print "walksat " + nfile + " " + str( '{0:,.2f}'.format( mean( wperiod ) ) ), str( '{0:,.2f}'.format( pstdev( wperiod ) ) )
+print "walksat " + nfile + " " + str( '{0:,.2f}'.format( mean( witeration ) ) ), str( '{0:,.2f}'.format( pstdev( witeration ) ) )
